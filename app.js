@@ -3,7 +3,9 @@ let sqlite = require("sqlite");
 let sqlite3 = require("sqlite3");
 let { open } = require("sqlite");
 let path = require("path");
+var isValid = require("date-fns/isValid");
 let format = require("date-fns/format");
+let parseISO = require("date-fns/parseISO");
 let app = express();
 app.use(express.json());
 
@@ -148,12 +150,10 @@ app.get("/todos/:todoId/", async (request, response) => {
 
 app.get("/agenda/", async (request, response) => {
   const { date } = request.query;
-
-  let fdate = format(new Date(date), "yyyy-MM-dd");
-
-  let query3 = `select * from todo where due_date = "${fdate}";`;
-  let x = await db.all(query3);
-  if (x.length !== 0) {
+  if (isValid(parseISO(date))) {
+    let fdate = format(new Date(date), "yyyy-MM-dd");
+    let query3 = `select * from todo where due_date = "${fdate}";`;
+    let x = await db.all(query3);
     let result3 = x.map((each) => {
       let x = {};
       x.id = each.id;
@@ -175,7 +175,7 @@ app.get("/agenda/", async (request, response) => {
 
 app.post("/todos/", async (request, response) => {
   const { id, todo, category, priority, status, dueDate } = request.body;
-  let fdate = format(new Date(dueDate), "yyyy-M-dd");
+  let fdate = format(new Date(dueDate), "yyyy-MM-dd");
   let querypost = `insert into todo 
   (id, todo, category, priority, status, due_date)
   values (${id},"${todo}","${category}","${priority}","${status}","${fdate}")`;
@@ -186,6 +186,7 @@ app.post("/todos/", async (request, response) => {
 app.put("/todos/:todoId/", async (request, response) => {
   const { id, todo, category, priority, status, dueDate } = request.body;
   let query5 = "";
+
   if (status !== undefined) {
     if (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") {
       query5 = `update todo set status = "${status}"`;
@@ -218,9 +219,14 @@ app.put("/todos/:todoId/", async (request, response) => {
     await db.run(query5);
     response.send("Todo Updated");
   } else if (dueDate !== undefined) {
-    query5 = `update todo set due_date = "${dueDate}"`;
-    await db.run(query5);
-    response.send("Due Date Updated");
+    if (isValid(parseISO(dueDate))) {
+      query5 = `update todo set due_date = "${dueDate}"`;
+      await db.run(query5);
+      response.send("Due Date Updated");
+    } else {
+      response.status(400);
+      response.send("Invalid Due Date");
+    }
   } else {
     console.log("x");
   }
