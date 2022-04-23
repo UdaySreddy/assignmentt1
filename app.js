@@ -155,14 +155,14 @@ app.get("/agenda/", async (request, response) => {
     let query3 = `select * from todo where due_date = "${fdate}";`;
     let x = await db.all(query3);
     let result3 = x.map((each) => {
-      let x = {};
-      x.id = each.id;
-      x.todo = each.todo;
-      x.priority = each.priority;
-      x.status = each.status;
-      x.category = each.category;
-      x.dueDate = each.due_date;
-      return x;
+      let y = {};
+      y.id = each.id;
+      y.todo = each.todo;
+      y.priority = each.priority;
+      y.status = each.status;
+      y.category = each.category;
+      y.dueDate = each.due_date;
+      return y;
     });
     response.send(result3);
   } else {
@@ -175,12 +175,43 @@ app.get("/agenda/", async (request, response) => {
 
 app.post("/todos/", async (request, response) => {
   const { id, todo, category, priority, status, dueDate } = request.body;
-  let fdate = format(new Date(dueDate), "yyyy-MM-dd");
-  let querypost = `insert into todo 
+  let x1 = "";
+  let x2 = "";
+  let x3 = "";
+  let x4 = "";
+  if (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") {
+    x1 = status;
+  } else {
+    response.status(400);
+    response.send("Invalid Todo Status");
+  }
+  if (category === "WORK" || category === "HOME" || category === "LEARNING") {
+    x2 = category;
+  } else {
+    response.status(400);
+    response.send("Invalid Todo Status");
+  }
+  if (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW") {
+    x3 = priority;
+  } else {
+    response.status(400);
+    response.send("Invalid Todo Status");
+  }
+
+  if (isValid(parseISO(dueDate))) {
+    x4 = dueDate;
+  } else {
+    response.status(400);
+    response.send("Invalid Due Date");
+  }
+
+  if ((x1 !== "", x2 !== "", x3 !== "", x4 !== "")) {
+    let querypost = `insert into todo 
   (id, todo, category, priority, status, due_date)
-  values (${id},"${todo}","${category}","${priority}","${status}","${fdate}")`;
-  await db.run(querypost);
-  response.send("Todo Successfully Added");
+  values (${id},"${todo}","${x2}","${x3}","${x1}","${x4}")`;
+    await db.run(querypost);
+    response.send("Todo Successfully Added");
+  }
 });
 
 app.put("/todos/:todoId/", async (request, response) => {
