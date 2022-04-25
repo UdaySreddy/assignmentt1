@@ -50,7 +50,7 @@ app.get("/todos/", async (request, response) => {
   console.log(id, todo, category, priority, status, search_q);
   if (status !== undefined) {
     query1 = `select * from todo where status = "${status}";`;
-    z = await db.all(query1);
+    let z = await db.all(query1);
     console.log(z.length);
     if (z.length === 0) {
       response.status(400);
@@ -215,7 +215,7 @@ app.post("/todos/", async (request, response) => {
       response.send("Invalid Due Date");
     }
 
-    if ((x1 !== "", x2 !== "", x3 !== "", x4 !== "")) {
+    if (x1 !== "" && x2 !== "" && x3 !== "" && x4 !== "") {
       let querypost = `insert into todo 
   (id, todo, category, priority, status, due_date)
   values (${id},"${todo}","${x2}","${x3}","${x1}","${x4}")`;
